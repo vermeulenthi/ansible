@@ -46,6 +46,12 @@
     src: ../src/debian/backup-restore/
     dest: /usr/bin/
 
+- name: Copy cukinia binary
+  ansible.builtin.copy:
+    src: ../src/debian/cukinia.bin
+    dest: /usr/local/bin/cukinia
+    mode: '0755'
+
 - name: Copy consolevm.sh
   ansible.builtin.copy:
     src: ../src/debian/consolevm.sh
@@ -75,11 +81,70 @@
     dest: /etc/syslog-ng/syslog-ng.conf
     mode: '0644'
   register: syslogconf
+- name: Create syslog-ng.service.d directory
+  file:
+    path: /etc/systemd/system/syslog-ng.service.d/
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+- name: Copy syslog-ng.service drop-in
+  ansible.builtin.copy:
+    src: ../src/debian/syslog-ng_override.conf
+    dest: /etc/systemd/system/syslog-ng.service.d/override.conf
+    owner: root
+    group: root
+    mode: 0644
+  register: syslogoverride
+  notify: daemon-reload
+
 - name: Restart syslog-ng
   ansible.builtin.systemd:
     state: restarted
     name: syslog-ng
-  when: syslogconf.changed
+  when: syslogconf.changed or syslogoverride.changed
+
+- name: Create ovsdb-server.service.d directory
+  file:
+    path: /etc/systemd/system/ovsdb-server.service.d/
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+- name: Copy ovsdb-server.service drop-in
+  ansible.builtin.copy:
+    src: ../src/debian/ovsdb-server_override.conf
+    dest: /etc/systemd/system/ovsdb-server.service.d/override.conf
+    owner: root
+    group: root
+    mode: 0644
+  register: ovsdbserveroverride
+- name: Restart ovsdb-server
+  ansible.builtin.systemd:
+    state: restarted
+    name: ovsdb-server
+  when: ovsdbserveroverride.changed
+
+- name: Create ovs-vswitchd.service.d directory
+  file:
+    path: /etc/systemd/system/ovs-vswitchd.service.d/
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+- name: Copy ovs-vswitchd.service drop-in
+  ansible.builtin.copy:
+    src: ../src/debian/ovs-vswitchd_override.conf
+    dest: /etc/systemd/system/ovs-vswitchd.service.d/override.conf
+    owner: root
+    group: root
+    mode: 0644
+  register: ovsvswitchdoverride
+- name: Restart ovs-vswitchd
+  ansible.builtin.systemd:
+    state: restarted
+    name: ovs-vswitchd
+  when: ovsvswitchdoverride.changed
 
 - name: Create libvirtd.service.d directory
   file:
@@ -239,6 +304,14 @@
     regexp: '^raid6_pq$'
     line: 'raid6_pq'
 
+# ovs-vswitchd hardening (systemd service) prevents the service to load the kernel module, so we load it beforehand
+- name: add openvswitch to /etc/modules
+  lineinfile:
+    dest: /etc/modules
+    state: present
+    regexp: '^openvswitch$'
+    line: 'openvswitch'
+
 - name: Copy apparmor libvirt-qemu rules
   ansible.builtin.copy:
     src: ../src/debian/etc_apparmor.d_abstractions_libvirt-qemu.conf
@@ -294,4 +367,24 @@
     regexp: '.* logstash-seapath$'
     line: "{{ logstash_server_ip }} logstash-seapath"
     state: present
+
+- name: create /etc/cukinia folder on hosts
+  file:
+    path: /etc/cukinia
+    state: directory
+    mode: '0755'
+- name: Synchronization of src cukinia to /etc/cukinia
+  ansible.posix.synchronize:
+    src: ../src/debian/etc_cukinia/
+    dest: /etc/cukinia
+
+- name: create /usr/share/testdata folder on hosts
+  file:
+    path: /usr/share/testdata
+    state: directory
+    mode: '0755'
+- name: Synchronization of src testdata to /usr/share/testdata
+  ansible.posix.synchronize:
+    src: ../src/debian/usr_share_testdata/
+    dest: /usr/share/testdata
 

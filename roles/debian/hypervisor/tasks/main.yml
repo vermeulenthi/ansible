@@ -35,7 +35,7 @@
   lineinfile:
     dest: /etc/default/grub
     regexp: '^GRUB_CMDLINE_LINUX=".*"$'
-    line: 'GRUB_CMDLINE_LINUX="ipv6.disable=1 efi=runtime processor.max_cstate=1 intel_idle.max_cstate=1 cpufreq.default_governor=performance default_hugepagesz=1G hugepagesz=1G no_debug_objects intel_pstate=disable nosoftlockup rcu_nocbs={{ cpumachinesrt }} rcu_nocb_poll rcutree.kthread_prio=10"'
+    line: 'GRUB_CMDLINE_LINUX="ipv6.disable=1 efi=runtime processor.max_cstate=1 intel_idle.max_cstate=1 cpufreq.default_governor=performance default_hugepagesz=1G hugepagesz=1G no_debug_objects intel_pstate=disable nosoftlockup isolcpus={{ cpumachinesrt }} nohz_full={{ cpumachinesrt }} rcu_nocbs={{ cpumachinesrt }} rcu_nocb_poll rcutree.kthread_prio=10 slab_nomerge pti=on slub_debug=ZF"'
     state: present
   register: updategrub1
 - name: update-grub
@@ -151,14 +151,14 @@
     - "ovs"
   when: newslices.changed
 
-- name: Create ovs-vswitchd.service.d directory
+- name: Create ovs-vswitchd.service.d directory (for slices)
   file:
     path: /etc/systemd/system/ovs-vswitchd.service.d/
     state: directory
     owner: root
     group: root
     mode: 0755
-- name: Copy ovs-vswitchd.service drop-in
+- name: Copy ovs-vswitchd.service drop-in (for slices)
   ansible.builtin.copy:
     src: ../src/debian/ovs-vswitchd_override.conf
     dest: /etc/systemd/system/ovs-vswitchd.service.d/override.conf
@@ -166,7 +166,7 @@
     group: root
     mode: 0644
   register: ovsvswitchd
-- name: Restart ovs-vswitchd
+- name: Restart ovs-vswitchd (for slices)
   ansible.builtin.systemd:
     state: restarted
     daemon_reload: yes
