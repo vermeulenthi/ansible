@@ -23,3 +23,6 @@ hardened_services:
   - pacemaker
   - syslog-ng
   - ceph-crash
+
+hardened_services_VMs:
+  - syslog-ng

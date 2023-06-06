@@ -110,20 +110,6 @@
   notify: update sysfs values using sysctl
   when: revert
 
-- name: "Force loading nf_conntrack at boot"
-  lineinfile:
-    dest: /etc/modules-load.d/modules.conf
-    regexp: "^nf_conntrack$"
-    line: "nf_conntrack"
-    state: present
-  when: not revert
-- name: "Disable force loading nf_conntrack at boot"
-  lineinfile:
-    dest: /etc/modules-load.d/modules.conf
-    regexp: "^nf_conntrack$"
-    state: absent
-  when: revert
-
 - name: "Install random-root-passwd.service"
   copy:
     src: ../src/debian/random-root-passwd.service
@@ -203,20 +189,6 @@
     state: absent
   when:  revert
 
-- name: Get ceph disk stats
-  stat:
-    path: "{{ ceph_osd_disk }}"
-  register: ceph_osd_disk_stat
-  when: ceph_osd_disk is defined
-- name: Restrict ceph sudoers file
-  template:
-    src: ../src/debian/sudoers/ceph.j2
-    dest: /etc/sudoers.d/ceph-osd-smartctl
-    owner: root
-    group: root
-    mode: '0440'
-  when: not revert
-
 - name: Find sudoers files
   find:
     paths: /etc/sudoers.d/
@@ -232,14 +204,16 @@
   with_items: "{{ sudoers_files.files }}"
   when: not revert
 
+
+
+  VIRER l'utilisateur ansible
+
 - name: adding sudo users to group privileged
   user:
     name: "{{ item }}"
     groups: privileged
     append: yes
   with_items:
-   - ceph
-   - Debian-snmp
    - virtu
    - ansible
   when: not revert
@@ -360,6 +334,9 @@
   register: services_to_restart
   with_items: "{{ hardened_services }}"
 
+POURQUOI LA ? 
+CRER UNE VARIABLE POUR
+
 - name: Uninstall apt packages not required after installation
   apt:
     name:
@@ -371,6 +348,8 @@
     autoremove: yes
   when: not revert
 
+PAREIL
+
 - name: Disable unused systemd services
   systemd:
     unit: "{{ item }}"
@@ -381,6 +360,7 @@
   with_items:
     - apt-daily-upgrade.timer
     - apt-daily.timer
+    Pas virer ça
     - systemd-resolved.service
 
 - name: Set grub password
