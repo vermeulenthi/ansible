@@ -55,6 +55,7 @@
   hosts:
     - cluster_machines
     - standalone_machine
+    - VMs
   vars_files:
     - ../vars/network_vars.yml
   roles:
@@ -64,6 +65,7 @@
   hosts:
     - cluster_machines
     - standalone_machine
+    - VMs
   become: true
   vars:
     apply_config: "{{ apply_network_config | default(false) }}"
@@ -106,7 +108,9 @@
         regexp: '^127.*debian'
 
 - name: Configure hosts and hostname
-  hosts: standalone_machine
+  hosts:
+    - standalone_machine
+    - VMs
   become: true
   tasks:
     - name: Set hostname
@@ -128,6 +132,7 @@
   hosts:
     - cluster_machines
     - standalone_machine
+    - VMs
   become: true
   tasks:
     - block:
@@ -158,6 +163,7 @@
         when: resolved_conf.changed or resolv_conf.changed
       when: dns_servers is defined
 
+# TODO : Configure the time management in the Virtual Machine
 - name: Configure TimeMaster
   hosts:
     - cluster_machines
@@ -229,6 +235,7 @@
   hosts:
     - cluster_machines
     - standalone_machine
+    - VMs
   become: true
   tasks:
     - name: Set observer IP address in /etc/syslog-ng/syslog-ng.conf
@@ -255,6 +262,7 @@
   hosts:
     - cluster_machines
     - standalone_machine
+    - VMs
   become: true
   tasks:
     - name: Create systemd-networkd-wait-online.service.d directory
@@ -276,7 +284,6 @@
 - name: Configure sriov libvirt network pool
   hosts:
     - hypervisors
-    - standalone_machine
   become: true
   tasks:
     - name: calling sriov network pool creation (with a loop)
@@ -291,6 +298,7 @@
   hosts:
     - cluster_machines
     - standalone_machine
+    - VMs
   become: true
   tasks:
     - block:
