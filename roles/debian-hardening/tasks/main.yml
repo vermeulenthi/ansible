@@ -334,35 +334,6 @@
   register: services_to_restart
   with_items: "{{ hardened_services }}"
 
-POURQUOI LA ? 
-CRER UNE VARIABLE POUR
-
-- name: Uninstall apt packages not required after installation
-  apt:
-    name:
-      - fdisk
-      - ifupdown
-      - libfdisk1
-    state: absent
-    purge: yes
-    autoremove: yes
-  when: not revert
-
-PAREIL
-
-- name: Disable unused systemd services
-  systemd:
-    unit: "{{ item }}"
-    state: stopped
-    enabled: no
-    no_block: yes
-  when: not revert
-  with_items:
-    - apt-daily-upgrade.timer
-    - apt-daily.timer
-    Pas virer ça
-    - systemd-resolved.service
-
 - name: Set grub password
   template:
     src: "01_password.j2"

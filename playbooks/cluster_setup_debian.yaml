@@ -24,3 +24,28 @@
         - skip_reboot_setup_debian is not defined or not skip_reboot_setup_debian
     - name: Wait for host to be online
       wait_for_connection:
+
+# TODO: move that in presrequisdebian ??
+- name: Uninstall apt packages not required after installation
+  apt:
+    name:
+      - fdisk
+      - ifupdown
+      - libfdisk1
+    state: absent
+    purge: yes
+    autoremove: yes
+  when: not revert
+
+- name: Disable unused systemd services
+  systemd:
+    unit: "{{ item }}"
+    state: stopped
+    enabled: no
+    no_block: yes
+  when: not revert
+  with_items:
+    - apt-daily-upgrade.timer
+    - apt-daily.timer
+    Pas virer ça
+    - systemd-resolved.service
