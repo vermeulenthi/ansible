@@ -2,8 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 ---
 
-- name: Remove hardened in SEAPTAH Debian machines
-  hosts: cluster_machines
+- name: Remove hardened in SEAPATH Debian machines
+  hosts:
+    - cluster_machines
+    - standalone_machine
+    - VMs
   vars:
     revert: true
   roles:
