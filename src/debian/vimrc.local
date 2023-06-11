@@ -1,2 +1,3 @@
-set mouse=
-set ttymouse=
+set mouse-=a
+set ttymouse-=a
+syntax on
